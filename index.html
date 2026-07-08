@@ -1,70 +1,103 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DHL Shipment JSON Generator</title>
-  <!-- CSS -->
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DHL Shipment Test Tool</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="container">
-    <!-- Header -->
-    <header class="header">
-      <div class="logo-area">
-        <img src="https://www.dhl.com/content/dam/dhl/global/core/images/logos/dhl-logo.svg" alt="DHL Logo" class="dhl-logo" onerror="this.style.display='none'">
-        <span class="brand-sub">Shipment Test Tool</span>
-      </div>
-      <div class="header-badge">
-        <span class="badge">API · HawkTest</span>
-      </div>
+    <!-- ===== HEADER ===== -->
+    <header class="dhl-header">
+        <div class="header-inner">
+            <div class="logo-area">
+                <img src="https://www.dhl.com/content/dam/dhl/global/core/images/logos/dhl-logo.svg" alt="DHL" class="dhl-logo" onerror="this.style.display='none'">
+                <span class="brand-tag">Test Tool</span>
+            </div>
+            <nav class="header-nav">
+                <a href="#">Pakete versenden</a>
+                <a href="#">Pakete empfangen</a>
+                <a href="#">Hilfe & Kontakt</a>
+            </nav>
+        </div>
+        <div class="header-umb">
+            <div class="umb-group">
+                <span class="umb-label">Umgebung:</span>
+                <span class="umb-badge active">Stage</span>
+                <span class="umb-badge">Prod</span>
+            </div>
+            <div class="umb-group">
+                <span class="umb-label">SubjectID:</span>
+                <span class="umb-value" id="subjectIdDisplay">872225573</span>
+                <button class="umb-refresh" id="refreshSubjectBtn">🔄 Aktualisieren</button>
+            </div>
+        </div>
     </header>
 
-    <!-- Formular -->
-    <form id="shipmentForm">
-      <div class="grid" id="fieldsContainer">
-        <!-- Felder werden per JS dynamisch erzeugt -->
-      </div>
-
-      <div class="actions">
-        <div class="btn-group">
-          <button type="button" class="btn btn-secondary" id="generateBtn">📋 JSON generieren</button>
-          <button type="button" class="btn btn-secondary" id="copyBtn">📄 Kopieren</button>
-          <button type="button" class="btn btn-primary" id="sendBtn">✉️ Senden</button>
-          <button type="button" class="btn btn-outline" id="resetDefaultsBtn">↺ Zurücksetzen</button>
+    <!-- ===== MAIN ===== -->
+    <main class="dhl-main">
+        <div class="page-title">
+            <h1>STAGE – personalisiert via Pega CDH</h1>
         </div>
-        <div>
-          <span class="status-badge" id="recordCount">1 Datensatz</span>
-        </div>
-      </div>
-    </form>
 
-    <!-- Preview + Response -->
-    <div class="preview-area" id="jsonPreview">
-      <div class="preview-header">
-        <span class="preview-title">📦 JSON Payload</span>
-        <div class="preview-actions">
-          <button class="btn-copy" id="copyBtnInline">📋 Kopieren</button>
-          <button class="btn-send" id="sendBtnInline">✉️ Senden</button>
-        </div>
-      </div>
-      <code id="jsonDisplay">// Klicke auf "JSON generieren"</code>
-      
-      <div class="response-box" id="responseBox">
-        <details id="responseDetails" open>
-          <summary>📨 Server-Antwort</summary>
-          <pre id="responseContent">🔹 Bereit. Klicke auf "Senden", um den Service aufzurufen.</pre>
-        </details>
-      </div>
-    </div>
+        <!-- ===== ZWEISPALTIG: Eingabe + JSON ===== -->
+        <div class="two-columns">
+            <!-- Linke Spalte: Eingabeformular -->
+            <section class="card input-card">
+                <div class="card-header">
+                    <span class="card-icon">📦</span>
+                    <h2>Versanddaten eingeben</h2>
+                </div>
+                <form id="shipmentForm">
+                    <div class="field-grid" id="fieldsContainer">
+                        <!-- Felder werden per JS dynamisch erzeugt -->
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-primary" id="generateBtn">🔄 JSON generieren</button>
+                        <button type="button" class="btn btn-secondary" id="resetDefaultsBtn">↺ Zurücksetzen</button>
+                    </div>
+                </form>
+            </section>
 
-    <footer class="footer">
-      <span>Endpoint: <code>https://depst-mara-stg1.pegacloud.net/prweb/api/HawkTest/01/HawkTest</code></span>
-      <span class="footer-version">v1.0 · DHL Test</span>
+            <!-- Rechte Spalte: JSON + Aktionen -->
+            <section class="card json-card">
+                <div class="card-header">
+                    <span class="card-icon">📋</span>
+                    <h2>JSON Payload</h2>
+                </div>
+                <div class="json-actions">
+                    <button class="btn btn-small btn-outline" id="copyBtn">📋 Kopieren</button>
+                    <button class="btn btn-small btn-send" id="sendBtn">✉️ Senden</button>
+                </div>
+                <div class="json-display" id="jsonDisplay">
+                    <code>// Klicke auf "JSON generieren"</code>
+                </div>
+                <div class="json-status">
+                    <span class="status-badge" id="recordCount">1 Datensatz</span>
+                </div>
+            </section>
+        </div>
+
+        <!-- ===== SERVER-ANTWORT ===== -->
+        <section class="card response-card">
+            <div class="card-header">
+                <span class="card-icon">📨</span>
+                <h2>Server-Antwort</h2>
+            </div>
+            <div class="response-content" id="responseContent">
+                🔹 Bereit. Klicke auf "Senden", um den Service aufzurufen.
+            </div>
+        </section>
+    </main>
+
+    <!-- ===== FOOTER ===== -->
+    <footer class="dhl-footer">
+        <div class="footer-inner">
+            <span>Endpoint: <code>https://depst-mara-stg1.pegacloud.net/prweb/api/HawkTest/01/HawkTest</code></span>
+            <span class="footer-meta">© 2026 DHL · v1.0 · Testumgebung</span>
+        </div>
     </footer>
-  </div>
 
-  <!-- JavaScript -->
-  <script src="script.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
