@@ -1,70 +1,421 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DHL Shipment JSON Generator</title>
-  <!-- CSS -->
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <div class="container">
-    <!-- Header -->
-    <header class="header">
-      <div class="logo-area">
-        <img src="https://www.dhl.com/content/dam/dhl/global/core/images/logos/dhl-logo.svg" alt="DHL Logo" class="dhl-logo" onerror="this.style.display='none'">
-        <span class="brand-sub">Shipment Test Tool</span>
-      </div>
-      <div class="header-badge">
-        <span class="badge">API · HawkTest</span>
-      </div>
-    </header>
+/* ============================================================
+   DHL-Website inspirierter Stil – Zweispalten-Layout
+   ============================================================ */
 
-    <!-- Formular -->
-    <form id="shipmentForm">
-      <div class="grid" id="fieldsContainer">
-        <!-- Felder werden per JS dynamisch erzeugt -->
-      </div>
+/* ---------- Reset & Basis ---------- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+}
 
-      <div class="actions">
-        <div class="btn-group">
-          <button type="button" class="btn btn-secondary" id="generateBtn">📋 JSON generieren</button>
-          <button type="button" class="btn btn-secondary" id="copyBtn">📄 Kopieren</button>
-          <button type="button" class="btn btn-primary" id="sendBtn">✉️ Senden</button>
-          <button type="button" class="btn btn-outline" id="resetDefaultsBtn">↺ Zurücksetzen</button>
-        </div>
-        <div>
-          <span class="status-badge" id="recordCount">1 Datensatz</span>
-        </div>
-      </div>
-    </form>
+body {
+    background: #f0f2f5;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
 
-    <!-- Preview + Response -->
-    <div class="preview-area" id="jsonPreview">
-      <div class="preview-header">
-        <span class="preview-title">📦 JSON Payload</span>
-        <div class="preview-actions">
-          <button class="btn-copy" id="copyBtnInline">📋 Kopieren</button>
-          <button class="btn-send" id="sendBtnInline">✉️ Senden</button>
-        </div>
-      </div>
-      <code id="jsonDisplay">// Klicke auf "JSON generieren"</code>
-      
-      <div class="response-box" id="responseBox">
-        <details id="responseDetails" open>
-          <summary>📨 Server-Antwort</summary>
-          <pre id="responseContent">🔹 Bereit. Klicke auf "Senden", um den Service aufzurufen.</pre>
-        </details>
-      </div>
-    </div>
+/* ---------- HEADER (DHL-Stil) ---------- */
+.dhl-header {
+    background: #ffffff;
+    border-bottom: 4px solid #ffcc00;
+    padding: 12px 40px 8px 40px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
 
-    <footer class="footer">
-      <span>Endpoint: <code>https://depst-mara-stg1.pegacloud.net/prweb/api/HawkTest/01/HawkTest</code></span>
-      <span class="footer-version">v1.0 · DHL Test</span>
-    </footer>
-  </div>
+.header-inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
 
-  <!-- JavaScript -->
-  <script src="script.js"></script>
-</body>
-</html>
+.logo-area {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.dhl-logo {
+    height: 38px;
+    width: auto;
+    object-fit: contain;
+}
+
+.brand-tag {
+    background: #003d6b;
+    color: white;
+    padding: 4px 16px;
+    border-radius: 40px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.header-nav {
+    display: flex;
+    gap: 28px;
+}
+
+.header-nav a {
+    color: #003d6b;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.9rem;
+    padding: 4px 0;
+    border-bottom: 2px solid transparent;
+    transition: 0.15s;
+}
+
+.header-nav a:hover {
+    border-bottom-color: #d40511;
+    color: #d40511;
+}
+
+/* ---- Umgebungsleiste ---- */
+.header-umb {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #e6e9ed;
+}
+
+.umb-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.umb-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #4a637c;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.umb-badge {
+    background: #e6edf6;
+    padding: 4px 16px;
+    border-radius: 40px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #003d6b;
+    cursor: pointer;
+    transition: 0.15s;
+}
+
+.umb-badge.active {
+    background: #d40511;
+    color: white;
+}
+
+.umb-badge:hover:not(.active) {
+    background: #d0dcec;
+}
+
+.umb-value {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #003d6b;
+    background: #f0f4fa;
+    padding: 2px 14px;
+    border-radius: 30px;
+}
+
+.umb-refresh {
+    background: transparent;
+    border: none;
+    color: #003d6b;
+    font-size: 0.8rem;
+    cursor: pointer;
+    font-weight: 500;
+    padding: 4px 12px;
+    border-radius: 30px;
+    transition: 0.15s;
+}
+
+.umb-refresh:hover {
+    background: #e6edf6;
+}
+
+/* ---------- MAIN ---------- */
+.dhl-main {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 24px 32px 16px 32px;
+    width: 100%;
+    flex: 1;
+}
+
+.page-title h1 {
+    font-size: 1.2rem;
+    font-weight: 400;
+    color: #003d6b;
+    margin-bottom: 20px;
+    letter-spacing: 0.3px;
+}
+
+/* ---------- ZWEISPALTIG ---------- */
+.two-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+    margin-bottom: 24px;
+}
+
+/* ---------- KARTEN ---------- */
+.card {
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    padding: 20px 24px 24px 24px;
+    border: 1px solid #e6e9ed;
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #f0f2f5;
+}
+
+.card-icon {
+    font-size: 1.2rem;
+}
+
+.card-header h2 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #003d6b;
+    margin: 0;
+}
+
+/* ---------- FELDER ---------- */
+.field-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 18px;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.field label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #4a637c;
+}
+
+.field input {
+    padding: 8px 12px;
+    border: 1px solid #d6e0ea;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    background: #fafcfe;
+    transition: 0.15s;
+    width: 100%;
+    color: #1e293b;
+}
+
+.field input:focus {
+    border-color: #d40511;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(212, 5, 17, 0.10);
+    background: white;
+}
+
+.field input[readonly] {
+    background: #f1f5f9;
+    color: #334155;
+}
+
+/* ---------- BUTTONS ---------- */
+.form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 18px;
+    flex-wrap: wrap;
+}
+
+.btn {
+    padding: 10px 24px;
+    border-radius: 40px;
+    font-weight: 500;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid transparent;
+}
+
+.btn-primary {
+    background: #d40511;
+    border-color: #b8050f;
+    color: white;
+    box-shadow: 0 4px 8px rgba(212, 5, 17, 0.20);
+}
+.btn-primary:hover {
+    background: #b8050f;
+    transform: scale(1.02);
+}
+
+.btn-secondary {
+    background: #003d6b;
+    border-color: #002f50;
+    color: white;
+}
+.btn-secondary:hover {
+    background: #002f50;
+}
+
+.btn-outline {
+    background: transparent;
+    border: 1px solid #b8c9dd;
+    color: #1e3a5f;
+}
+.btn-outline:hover {
+    background: #eaf1f9;
+}
+
+.btn-small {
+    padding: 6px 16px;
+    font-size: 0.75rem;
+}
+
+.btn-send {
+    background: #d48c2e;
+    border-color: #b87620;
+    color: white;
+}
+.btn-send:hover {
+    background: #b87620;
+}
+
+/* ---------- JSON KARTE ---------- */
+.json-actions {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.json-display {
+    background: #0b1f2e;
+    border-radius: 12px;
+    padding: 16px 18px;
+    min-height: 200px;
+    max-height: 380px;
+    overflow: auto;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 0.72rem;
+    color: #c8ddee;
+    white-space: pre-wrap;
+    word-break: break-word;
+    border: 1px solid #1f3a4f;
+}
+
+.json-status {
+    margin-top: 12px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.status-badge {
+    background: #e6edf6;
+    border-radius: 40px;
+    padding: 4px 16px;
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: #003d6b;
+}
+
+/* ---------- ANTWORT ---------- */
+.response-card {
+    margin-top: 0;
+}
+
+.response-content {
+    background: #0b1f2e;
+    border-radius: 12px;
+    padding: 16px 20px;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 0.75rem;
+    color: #b8d4ed;
+    white-space: pre-wrap;
+    word-break: break-word;
+    min-height: 80px;
+    max-height: 200px;
+    overflow: auto;
+    border: 1px solid #1f3a4f;
+}
+
+/* ---------- FOOTER ---------- */
+.dhl-footer {
+    background: #003d6b;
+    color: #b0c8de;
+    padding: 14px 40px;
+    margin-top: 16px;
+}
+
+.footer-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    font-size: 0.75rem;
+}
+
+.footer-inner code {
+    background: #1a4a70;
+    padding: 2px 14px;
+    border-radius: 30px;
+    font-size: 0.7rem;
+    color: #d4e8f5;
+}
+
+.footer-meta {
+    color: #7fa0c0;
+}
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width: 1024px) {
+    .two-columns {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 700px) {
+    .dhl-header { padding: 12px 16px; }
+    .dhl-main { padding: 16px; }
+    .header-inner { flex-direction: column; align-items: flex-start; }
+    .header-nav { flex-wrap: wrap; gap: 16px; }
+    .header-umb { flex-direction: column; align-items: flex-start; }
+    .field-grid { grid-template-columns: 1fr; }
+    .card { padding: 16px; }
+}
+
+@media (max-width: 480px) {
+    .dhl-footer { padding: 12px 16px; }
+    .footer-inner { flex-direction: column; align-items: flex-start; }
+}
