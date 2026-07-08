@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DHL Shipment JSON Generator</title>
+  <!-- CSS -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <div class="logo-area">
+        <img src="https://www.dhl.com/content/dam/dhl/global/core/images/logos/dhl-logo.svg" alt="DHL Logo" class="dhl-logo" onerror="this.style.display='none'">
+        <span class="brand-sub">Shipment Test Tool</span>
+      </div>
+      <div class="header-badge">
+        <span class="badge">API · HawkTest</span>
+      </div>
+    </header>
+
+    <!-- Formular -->
+    <form id="shipmentForm">
+      <div class="grid" id="fieldsContainer">
+        <!-- Felder werden per JS dynamisch erzeugt -->
+      </div>
+
+      <div class="actions">
+        <div class="btn-group">
+          <button type="button" class="btn btn-secondary" id="generateBtn">📋 JSON generieren</button>
+          <button type="button" class="btn btn-secondary" id="copyBtn">📄 Kopieren</button>
+          <button type="button" class="btn btn-primary" id="sendBtn">✉️ Senden</button>
+          <button type="button" class="btn btn-outline" id="resetDefaultsBtn">↺ Zurücksetzen</button>
+        </div>
+        <div>
+          <span class="status-badge" id="recordCount">1 Datensatz</span>
+        </div>
+      </div>
+    </form>
+
+    <!-- Preview + Response -->
+    <div class="preview-area" id="jsonPreview">
+      <div class="preview-header">
+        <span class="preview-title">📦 JSON Payload</span>
+        <div class="preview-actions">
+          <button class="btn-copy" id="copyBtnInline">📋 Kopieren</button>
+          <button class="btn-send" id="sendBtnInline">✉️ Senden</button>
+        </div>
+      </div>
+      <code id="jsonDisplay">// Klicke auf "JSON generieren"</code>
+      
+      <div class="response-box" id="responseBox">
+        <details id="responseDetails" open>
+          <summary>📨 Server-Antwort</summary>
+          <pre id="responseContent">🔹 Bereit. Klicke auf "Senden", um den Service aufzurufen.</pre>
+        </details>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <span>Endpoint: <code>https://depst-mara-stg1.pegacloud.net/prweb/api/HawkTest/01/HawkTest</code></span>
+      <span class="footer-version">v1.0 · DHL Test</span>
+    </footer>
+  </div>
+
+  <!-- JavaScript -->
+  <script src="script.js"></script>
+</body>
+</html>
