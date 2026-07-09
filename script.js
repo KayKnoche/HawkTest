@@ -15,7 +15,7 @@
     };
 
     // ============================================================
-    // 2. Endpoints für Stage und Prod
+    // 2. Endpoints für Stage und Prod (angepasst)
     // ============================================================
     const ENDPOINTS = {
         stage: 'https://depst-mara-stg1.pegacloud.net/prweb/api/HawkTest/01/HawkTest',
@@ -26,15 +26,7 @@
     let currentEndpoint = ENDPOINTS.stage;
 
     // ============================================================
-    // 3. Mapping: EventClass → Status + PrimaryCriteria
-    // ============================================================
-    const EVENT_MAPPING = {
-        'PAN': { status: 'PAN', primaryCriteria: 'PAN_PAKET' },
-        'PZA': { status: 'PZA', primaryCriteria: 'PZA_PAKET' }
-    };
-
-    // ============================================================
-    // 4. DOM-Referenzen (mit Prüfung)
+    // 3. DOM-Referenzen (mit Prüfung)
     // ============================================================
     function getEl(id) {
         const el = document.getElementById(id);
@@ -73,33 +65,17 @@
     const fieldWeight = getEl('field-Package_Weight_Value');
     const fieldVolume = getEl('field-Package_Volume_Unit');
 
-    const eventSelect = getEl('field-EventClass');
-    const fieldStatus = getEl('field-Status');
-    const fieldPrimaryCriteria = getEl('field-PrimaryCriteria');
-
     const accordionHeaders = document.querySelectorAll('.accordion-header');
 
     // ============================================================
-    // 5. Alle sichtbaren Eingabefelder sammeln
+    // 4. Alle sichtbaren Eingabefelder sammeln
     // ============================================================
     function getAllVisibleFields() {
-        return document.querySelectorAll('#shipmentForm input[type="text"]:not([type="hidden"]), #shipmentForm select');
+        return document.querySelectorAll('#shipmentForm input[type="text"]:not([type="hidden"])');
     }
 
     // ============================================================
-    // 6. EventClass → Status & PrimaryCriteria setzen
-    // ============================================================
-    function updateEventDependentFields(eventClass) {
-        const mapping = EVENT_MAPPING[eventClass];
-        if (mapping) {
-            if (fieldStatus) fieldStatus.value = mapping.status;
-            if (fieldPrimaryCriteria) fieldPrimaryCriteria.value = mapping.primaryCriteria;
-            console.log(`📌 EventClass=${eventClass} → Status=${mapping.status}, PrimaryCriteria=${mapping.primaryCriteria}`);
-        }
-    }
-
-    // ============================================================
-    // 7. PostNumber generieren
+    // 5. PostNumber generieren
     // ============================================================
     function generatePostNumber() {
         const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
@@ -112,7 +88,7 @@
     }
 
     // ============================================================
-    // 8. getCurrentValues – alle Daten sammeln
+    // 6. getCurrentValues – alle Daten sammeln
     // ============================================================
     function getCurrentValues() {
         const obj = {};
@@ -122,6 +98,7 @@
             obj[input.name] = input.value;
         });
 
+        // Maße aus versteckten Feldern
         obj['Package_Length_Value'] = fieldLength ? fieldLength.value : '1.2';
         obj['Package_Width_Value'] = fieldWidth ? fieldWidth.value : '0.6';
         obj['Package_Height_Value'] = fieldHeight ? fieldHeight.value : '0.6';
@@ -133,9 +110,9 @@
         obj['Package_Height_Unit'] = 'M';
         obj['Package_Weight_Unit'] = 'KG';
 
-        obj['Status'] = fieldStatus ? fieldStatus.value : 'PAN';
-        obj['PrimaryCriteria'] = fieldPrimaryCriteria ? fieldPrimaryCriteria.value : 'PAN_PAKET';
-        obj['EventClass'] = eventSelect ? eventSelect.value : 'PAN';
+        obj['Status'] = 'PAN';
+        obj['PrimaryCriteria'] = 'PAN_PAKET';
+        obj['EventClass'] = 'PAN';
 
         obj['PostNumber'] = generatePostNumber();
 
@@ -143,7 +120,7 @@
     }
 
     // ============================================================
-    // 9. Maße setzen
+    // 7. Maße setzen
     // ============================================================
     function setMeasures(size) {
         console.log('📐 setMeasures aufgerufen mit:', size);
@@ -183,7 +160,7 @@
     }
 
     // ============================================================
-    // 10. Defaults setzen
+    // 8. Defaults setzen
     // ============================================================
     function setDefaults() {
         console.log('↺ setDefaults aufgerufen');
@@ -196,11 +173,6 @@
         });
 
         if (presetDropdown) presetDropdown.value = '';
-
-        if (eventSelect) {
-            eventSelect.value = 'PAN';
-            updateEventDependentFields('PAN');
-        }
 
         const defaultLength = '1.2';
         const defaultWidth = '0.6';
@@ -224,7 +196,7 @@
     }
 
     // ============================================================
-    // 11. Preview aktualisieren
+    // 9. Preview aktualisieren
     // ============================================================
     function updatePreview() {
         console.log('🔄 updatePreview aufgerufen');
@@ -239,7 +211,7 @@
     }
 
     // ============================================================
-    // 12. Kopieren
+    // 10. Kopieren
     // ============================================================
     function copyToClipboard() {
         console.log('📋 copyToClipboard aufgerufen');
@@ -262,7 +234,7 @@
     }
 
     // ============================================================
-    // 13. Senden
+    // 11. Senden
     // ============================================================
     async function sendToService() {
         console.log('🚀 sendToService aufgerufen – Endpoint:', currentEndpoint);
@@ -301,7 +273,7 @@
     }
 
     // ============================================================
-    // 14. SubjectID aktualisieren
+    // 12. SubjectID aktualisieren
     // ============================================================
     function refreshSubjectId() {
         console.log('🔄 refreshSubjectId aufgerufen');
@@ -312,7 +284,7 @@
     }
 
     // ============================================================
-    // 15. Stage/Prod Toggle
+    // 13. Stage/Prod Toggle
     // ============================================================
     function setEnvironment(env) {
         console.log('🌍 setEnvironment aufgerufen:', env);
@@ -341,7 +313,7 @@
     }
 
     // ============================================================
-    // 16. Akkordeon
+    // 14. Akkordeon
     // ============================================================
     function toggleAccordion(header) {
         const targetId = header.dataset.target;
@@ -361,7 +333,7 @@
     }
 
     // ============================================================
-    // 17. Event-Listener
+    // 15. Event-Listener
     // ============================================================
     function init() {
         console.log('✅ init() wird ausgeführt – binde Events...');
@@ -410,16 +382,6 @@
             console.log('✅ presetDropdown gebunden');
         }
 
-        if (eventSelect) {
-            eventSelect.addEventListener('change', function() {
-                console.log('🎯 EventClass geändert:', this.value);
-                updateEventDependentFields(this.value);
-                updatePreview();
-            });
-            console.log('✅ eventSelect gebunden');
-            updateEventDependentFields(eventSelect.value);
-        }
-
         accordionHeaders.forEach(header => {
             header.addEventListener('click', function() {
                 toggleAccordion(this);
@@ -447,7 +409,7 @@
     }
 
     // ============================================================
-    // 18. Start
+    // 16. Start
     // ============================================================
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);

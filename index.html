@@ -174,7 +174,7 @@
                             <span class="accordion-toggle">+</span>
                         </div>
                         <div class="accordion-panel" id="panelOther">
-                            <div class="field-grid-3col">
+                            <div class="field-grid">
                                 <div class="field">
                                     <label for="field-ID">ID</label>
                                     <input type="text" id="field-ID" name="ID" value="10000478269202" data-default="10000478269202" />
@@ -204,15 +204,20 @@
                                     <input type="text" id="field-ShipmentCategory" name="ShipmentCategory" value="PAKET" data-default="PAKET" />
                                 </div>
                                 <div class="field">
+                                    <label for="field-Status">Status</label>
+                                    <input type="text" id="field-Status" name="Status" value="PAN" data-default="PAN" />
+                                </div>
+                                <div class="field">
                                     <label for="field-EventClass">EventClass</label>
-                                    <select id="field-EventClass" name="EventClass" class="event-select">
-                                        <option value="PAN">PAN</option>
-                                        <option value="PZA">PZA</option>
-                                    </select>
+                                    <input type="text" id="field-EventClass" name="EventClass" value="PAN" data-default="PAN" />
                                 </div>
                                 <div class="field">
                                     <label for="field-DstID">DstID</label>
                                     <input type="text" id="field-DstID" name="DstID" value="5003" data-default="5003" />
+                                </div>
+                                <div class="field">
+                                    <label for="field-PrimaryCriteria">PrimaryCriteria</label>
+                                    <input type="text" id="field-PrimaryCriteria" name="PrimaryCriteria" value="PAN_PAKET" data-default="PAN_PAKET" />
                                 </div>
                                 <div class="field">
                                     <label for="field-AddressedDeliveryChannel">Zustellkanal</label>
@@ -223,9 +228,6 @@
                                     <input type="text" id="field-Procedure" name="Procedure" value="87" data-default="87" />
                                 </div>
                             </div>
-                            <!-- Status und PrimaryCriteria sind versteckt – werden automatisch befüllt -->
-                            <input type="hidden" id="field-Status" name="Status" value="PAN" />
-                            <input type="hidden" id="field-PrimaryCriteria" name="PrimaryCriteria" value="PAN_PAKET" />
                         </div>
                     </div>
 

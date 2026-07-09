@@ -329,21 +329,13 @@ body {
     margin-left: 2px;
 }
 
-/* ---------- 2-SPALTEN-GRID für Adressen ---------- */
+/* ---------- FELDER ---------- */
 .field-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 10px 18px;
 }
 
-/* ---------- 3-SPALTEN-GRID für "Weitere Felder" ---------- */
-.field-grid-3col {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px 18px;
-}
-
-/* ---------- FELDER ---------- */
 .field {
     display: flex;
     flex-direction: column;
@@ -358,8 +350,7 @@ body {
     color: #4a637c;
 }
 
-.field input,
-.field select {
+.field input {
     padding: 8px 12px;
     border: 1px solid #d6e0ea;
     border-radius: 10px;
@@ -369,8 +360,7 @@ body {
     width: 100%;
     color: #1e293b;
 }
-.field input:focus,
-.field select:focus {
+.field input:focus {
     border-color: #d40511;
     outline: none;
     box-shadow: 0 0 0 3px rgba(212, 5, 17, 0.10);
@@ -379,26 +369,6 @@ body {
 .field input[readonly] {
     background: #f1f5f9;
     color: #334155;
-}
-
-/* ---------- EVENT SELECT (Dropdown) ---------- */
-.event-select {
-    padding: 8px 12px;
-    border: 1px solid #d6e0ea;
-    border-radius: 10px;
-    font-size: 0.8rem;
-    background: #fafcfe;
-    transition: 0.15s;
-    width: 100%;
-    color: #1e293b;
-    cursor: pointer;
-    appearance: auto;
-}
-.event-select:focus {
-    border-color: #d40511;
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(212, 5, 17, 0.10);
-    background: white;
 }
 
 /* ---------- BUTTONS ---------- */
@@ -560,12 +530,6 @@ body {
     }
 }
 
-@media (max-width: 900px) {
-    .field-grid-3col {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
 @media (max-width: 700px) {
     .dhl-header { padding: 12px 16px; }
     .dhl-main { padding: 16px; }
@@ -573,7 +537,6 @@ body {
     .header-nav { flex-wrap: wrap; gap: 16px; }
     .header-umb { flex-direction: column; align-items: flex-start; }
     .field-grid { grid-template-columns: 1fr; }
-    .field-grid-3col { grid-template-columns: 1fr; }
     .card { padding: 16px; }
     .measure-display { grid-template-columns: 1fr 1fr; }
     .preset-select { flex-direction: column; align-items: stretch; }
