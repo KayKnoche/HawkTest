@@ -62,40 +62,55 @@
                             <span class="accordion-toggle">−</span>
                         </div>
                         <div class="accordion-panel open" id="panelMeasures">
-                            <div class="preset-sizes">
-                                <span class="preset-label">Vordefinierte Größe:</span>
-                                <button type="button" class="preset-btn" data-preset="S">S</button>
-                                <button type="button" class="preset-btn" data-preset="M">M</button>
-                                <button type="button" class="preset-btn" data-preset="L">L</button>
-                                <button type="button" class="preset-btn" data-preset="XL">XL</button>
-                                <button type="button" class="preset-btn" data-preset="XXL">XXL</button>
+                            <!-- Auswahlbox für vordefinierte Größen -->
+                            <div class="preset-select">
+                                <label for="presetDropdown" class="preset-label">Vordefinierte Größe:</label>
+                                <select id="presetDropdown" class="preset-dropdown">
+                                    <option value="">-- Bitte wählen --</option>
+                                    <option value="S">S – 20×15×10 cm, 0.5 kg</option>
+                                    <option value="M">M – 40×30×20 cm, 2.0 kg</option>
+                                    <option value="L">L – 60×40×30 cm, 5.0 kg</option>
+                                    <option value="XL">XL – 80×60×40 cm, 10.0 kg</option>
+                                    <option value="XXL">XXL – 120×80×60 cm, 20.0 kg</option>
+                                </select>
                             </div>
-                            <div class="field-grid">
-                                <div class="field">
-                                    <label for="field-Package_Length_Value">Länge (m)</label>
-                                    <input type="text" id="field-Package_Length_Value" name="Package_Length_Value" value="1.2" data-default="1.2" />
+
+                            <!-- Anzeige der Maße (nur Werte, keine Einheiten-Felder) -->
+                            <div class="measure-display">
+                                <div class="measure-item">
+                                    <span class="measure-label">Länge:</span>
+                                    <span class="measure-value" id="displayLength">1.20</span>
+                                    <span class="measure-unit">m</span>
                                 </div>
-                                <div class="field">
-                                    <label for="field-Package_Width_Value">Breite (m)</label>
-                                    <input type="text" id="field-Package_Width_Value" name="Package_Width_Value" value="0.6" data-default="0.6" />
+                                <div class="measure-item">
+                                    <span class="measure-label">Breite:</span>
+                                    <span class="measure-value" id="displayWidth">0.60</span>
+                                    <span class="measure-unit">m</span>
                                 </div>
-                                <div class="field">
-                                    <label for="field-Package_Height_Value">Höhe (m)</label>
-                                    <input type="text" id="field-Package_Height_Value" name="Package_Height_Value" value="0.6" data-default="0.6" />
+                                <div class="measure-item">
+                                    <span class="measure-label">Höhe:</span>
+                                    <span class="measure-value" id="displayHeight">0.60</span>
+                                    <span class="measure-unit">m</span>
                                 </div>
-                                <div class="field">
-                                    <label for="field-Package_Weight_Value">Gewicht (kg)</label>
-                                    <input type="text" id="field-Package_Weight_Value" name="Package_Weight_Value" value="15.0" data-default="15.0" />
+                                <div class="measure-item">
+                                    <span class="measure-label">Gewicht:</span>
+                                    <span class="measure-value" id="displayWeight">15.0</span>
+                                    <span class="measure-unit">kg</span>
                                 </div>
-                                <div class="field">
-                                    <label for="field-Package_Volume_Unit">Volumen (m³)</label>
-                                    <input type="text" id="field-Package_Volume_Unit" name="Package_Volume_Unit" value="0" data-default="0" />
-                                </div>
-                                <div class="field">
-                                    <label for="field-Package_Length_Unit">Einheit</label>
-                                    <input type="text" id="field-Package_Length_Unit" name="Package_Length_Unit" value="M" data-default="M" />
+                                <div class="measure-item">
+                                    <span class="measure-label">Volumen:</span>
+                                    <span class="measure-value" id="displayVolume">0.432</span>
+                                    <span class="measure-unit">m³</span>
                                 </div>
                             </div>
+
+                            <!-- Versteckte Felder für die JSON-Werte -->
+                            <input type="hidden" id="field-Package_Length_Value" name="Package_Length_Value" value="1.2" />
+                            <input type="hidden" id="field-Package_Width_Value" name="Package_Width_Value" value="0.6" />
+                            <input type="hidden" id="field-Package_Height_Value" name="Package_Height_Value" value="0.6" />
+                            <input type="hidden" id="field-Package_Weight_Value" name="Package_Weight_Value" value="15.0" />
+                            <input type="hidden" id="field-Package_Volume_Unit" name="Package_Volume_Unit" value="0.432" />
+                            <!-- Einheiten werden fest in der JSON-Generierung gesetzt -->
                         </div>
                     </div>
 
@@ -183,10 +198,6 @@
                                     <input type="text" id="field-EkpRegulatorShipment" name="EkpRegulatorShipment" value="7000100904" data-default="7000100904" />
                                 </div>
                                 <div class="field">
-                                    <label for="field-PostNumber">PostNumber</label>
-                                    <input type="text" id="field-PostNumber" name="PostNumber" value="pegacdhuniversaltier-i-0babab5e71783512925378000" data-default="pegacdhuniversaltier-i-0babab5e71783512925378000" />
-                                </div>
-                                <div class="field">
                                     <label for="field-Participation">Participation</label>
                                     <input type="text" id="field-Participation" name="Participation" value="01" data-default="01" />
                                 </div>
@@ -217,18 +228,6 @@
                                 <div class="field">
                                     <label for="field-AddressedDeliveryChannel">Zustellkanal</label>
                                     <input type="text" id="field-AddressedDeliveryChannel" name="AddressedDeliveryChannel" value="HAUSADRESSE" data-default="HAUSADRESSE" />
-                                </div>
-                                <div class="field">
-                                    <label for="field-Package_Width_Unit">Breiten-Einheit</label>
-                                    <input type="text" id="field-Package_Width_Unit" name="Package_Width_Unit" value="M" data-default="M" />
-                                </div>
-                                <div class="field">
-                                    <label for="field-Package_Height_Unit">Höhen-Einheit</label>
-                                    <input type="text" id="field-Package_Height_Unit" name="Package_Height_Unit" value="M" data-default="M" />
-                                </div>
-                                <div class="field">
-                                    <label for="field-Package_Weight_Unit">Gewichts-Einheit</label>
-                                    <input type="text" id="field-Package_Weight_Unit" name="Package_Weight_Unit" value="KG" data-default="KG" />
                                 </div>
                                 <div class="field">
                                     <label for="field-Procedure">Procedure</label>
