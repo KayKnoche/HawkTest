@@ -15,7 +15,7 @@
     };
 
     // ============================================================
-    // 2. Endpoints für Stage und Prod (angepasst)
+    // 2. Endpoints für Stage und Prod
     // ============================================================
     const ENDPOINTS = {
         stage: 'https://depst-mara-stg1.pegacloud.net/prweb/api/HawkTest/01/HawkTest',
@@ -26,7 +26,15 @@
     let currentEndpoint = ENDPOINTS.stage;
 
     // ============================================================
-    // 3. DOM-Referenzen (mit Prüfung)
+    // 3. Mapping: EventClass → Status + PrimaryCriteria
+    // ============================================================
+    const EVENT_MAPPING = {
+        'PAN': { status: 'PAN', primaryCriteria: 'PAN_PAKET' },
+        'PZA': { status: 'PZA', primaryCriteria: 'PZA_PAKET' }
+    };
+
+    // ============================================================
+    // 4. DOM-Referenzen (mit Prüfung)
     // ============================================================
     function getEl(id) {
         const el = document.getElementById(id);
@@ -65,17 +73,33 @@
     const fieldWeight = getEl('field-Package_Weight_Value');
     const fieldVolume = getEl('field-Package_Volume_Unit');
 
+    const eventSelect = getEl('field-EventClass');
+    const fieldStatus = getEl('field-Status');
+    const fieldPrimaryCriteria = getEl('field-PrimaryCriteria');
+
     const accordionHeaders = document.querySelectorAll('.accordion-header');
 
     // ============================================================
-    // 4. Alle sichtbaren Eingabefelder sammeln
+    // 5. Alle sichtbaren Eingabefelder sammeln
     // ============================================================
     function getAllVisibleFields() {
-        return document.querySelectorAll('#shipmentForm input[type="text"]:not([type="hidden"])');
+        return document.querySelectorAll('#shipmentForm input[type="text"]:not([type="hidden"]), #shipmentForm select');
     }
 
     // ============================================================
-    // 5. PostNumber generieren
+    // 6. EventClass → Status & PrimaryCriteria setzen
+    // ============================================================
+    function updateEventDependentFields(eventClass) {
+        const mapping = EVENT_MAPPING[eventClass];
+        if (mapping) {
+            if (fieldStatus) fieldStatus.value = mapping.status;
+            if (fieldPrimaryCriteria) fieldPrimaryCriteria.value = mapping.primaryCriteria;
+            console.log(`📌 EventClass=${eventClass} → Status=${mapping.status}, PrimaryCriteria=${mapping.primaryCriteria}`);
+        }
+    }
+
+    // ============================================================
+    // 7. PostNumber generieren
     // ============================================================
     function generatePostNumber() {
         const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
@@ -88,7 +112,7 @@
     }
 
     // ============================================================
-    // 6. getCurrentValues – alle Daten sammeln
+    // 8. getCurrentValues – alle Daten sammeln
     // ============================================================
     function getCurrentValues() {
         const obj = {};
@@ -105,22 +129,25 @@
         obj['Package_Weight_Value'] = fieldWeight ? fieldWeight.value : '15.0';
         obj['Package_Volume_Unit'] = fieldVolume ? fieldVolume.value : '0.432';
 
+        // Feste Einheiten
         obj['Package_Length_Unit'] = 'M';
         obj['Package_Width_Unit'] = 'M';
         obj['Package_Height_Unit'] = 'M';
         obj['Package_Weight_Unit'] = 'KG';
 
-        obj['Status'] = 'PAN';
-        obj['PrimaryCriteria'] = 'PAN_PAKET';
-        obj['EventClass'] = 'PAN';
+        // Status, PrimaryCriteria und EventClass aus den versteckten / Dropdown-Feldern
+        obj['Status'] = fieldStatus ? fieldStatus.value : 'PAN';
+        obj['PrimaryCriteria'] = fieldPrimaryCriteria ? fieldPrimaryCriteria.value : 'PAN_PAKET';
+        obj['EventClass'] = eventSelect ? eventSelect.value : 'PAN';
 
+        // PostNumber generieren
         obj['PostNumber'] = generatePostNumber();
 
         return obj;
     }
 
     // ============================================================
-    // 7. Maße setzen
+    // 9. Maße setzen
     // ============================================================
     function setMeasures(size) {
         console.log('📐 setMeasures aufgerufen mit:', size);
@@ -160,7 +187,7 @@
     }
 
     // ============================================================
-    // 8. Defaults setzen
+    // 10. Defaults setzen
     // ============================================================
     function setDefaults() {
         console.log('↺ setDefaults aufgerufen');
@@ -173,6 +200,11 @@
         });
 
         if (presetDropdown) presetDropdown.value = '';
+
+        if (eventSelect) {
+            eventSelect.value = 'PAN';
+            updateEventDependentFields('PAN');
+        }
 
         const defaultLength = '1.2';
         const defaultWidth = '0.6';
@@ -196,7 +228,7 @@
     }
 
     // ============================================================
-    // 9. Preview aktualisieren
+    // 11. Preview aktualisieren
     // ============================================================
     function updatePreview() {
         console.log('🔄 updatePreview aufgerufen');
@@ -211,7 +243,7 @@
     }
 
     // ============================================================
-    // 10. Kopieren
+    // 12. Kopieren
     // ============================================================
     function copyToClipboard() {
         console.log('📋 copyToClipboard aufgerufen');
@@ -234,7 +266,7 @@
     }
 
     // ============================================================
-    // 11. Senden
+    // 13. Senden
     // ============================================================
     async function sendToService() {
         console.log('🚀 sendToService aufgerufen – Endpoint:', currentEndpoint);
@@ -273,7 +305,7 @@
     }
 
     // ============================================================
-    // 12. SubjectID aktualisieren
+    // 14. SubjectID aktualisieren
     // ============================================================
     function refreshSubjectId() {
         console.log('🔄 refreshSubjectId aufgerufen');
@@ -284,7 +316,7 @@
     }
 
     // ============================================================
-    // 13. Stage/Prod Toggle
+    // 15. Stage/Prod Toggle
     // ============================================================
     function setEnvironment(env) {
         console.log('🌍 setEnvironment aufgerufen:', env);
@@ -313,7 +345,7 @@
     }
 
     // ============================================================
-    // 14. Akkordeon
+    // 16. Akkordeon
     // ============================================================
     function toggleAccordion(header) {
         const targetId = header.dataset.target;
@@ -333,7 +365,7 @@
     }
 
     // ============================================================
-    // 15. Event-Listener
+    // 17. Event-Listener
     // ============================================================
     function init() {
         console.log('✅ init() wird ausgeführt – binde Events...');
@@ -382,6 +414,16 @@
             console.log('✅ presetDropdown gebunden');
         }
 
+        if (eventSelect) {
+            eventSelect.addEventListener('change', function() {
+                console.log('🎯 EventClass geändert:', this.value);
+                updateEventDependentFields(this.value);
+                updatePreview();
+            });
+            console.log('✅ eventSelect gebunden');
+            updateEventDependentFields(eventSelect.value);
+        }
+
         accordionHeaders.forEach(header => {
             header.addEventListener('click', function() {
                 toggleAccordion(this);
@@ -409,7 +451,7 @@
     }
 
     // ============================================================
-    // 16. Start
+    // 18. Start
     // ============================================================
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
