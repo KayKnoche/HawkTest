@@ -23,8 +23,8 @@
         <div class="header-umb">
             <div class="umb-group">
                 <span class="umb-label">Umgebung:</span>
-                <span class="umb-badge active" data-env="stage" id="envStage">Stage</span>
-                <span class="umb-badge" data-env="prod" id="envProd">Prod</span>
+                <span class="umb-badge active" id="envStage">Stage</span>
+                <span class="umb-badge" id="envProd">Prod</span>
             </div>
             <div class="umb-group">
                 <span class="umb-label">SubjectID:</span>
@@ -62,7 +62,6 @@
                             <span class="accordion-toggle">−</span>
                         </div>
                         <div class="accordion-panel open" id="panelMeasures">
-                            <!-- Auswahlbox für vordefinierte Größen -->
                             <div class="preset-select">
                                 <label for="presetDropdown" class="preset-label">Vordefinierte Größe:</label>
                                 <select id="presetDropdown" class="preset-dropdown">
@@ -74,8 +73,6 @@
                                     <option value="XXL">XXL – 120×80×60 cm, 20.0 kg</option>
                                 </select>
                             </div>
-
-                            <!-- Anzeige der Maße (nur Werte, keine Einheiten-Felder) -->
                             <div class="measure-display">
                                 <div class="measure-item">
                                     <span class="measure-label">Länge:</span>
@@ -103,14 +100,11 @@
                                     <span class="measure-unit">m³</span>
                                 </div>
                             </div>
-
-                            <!-- Versteckte Felder für die JSON-Werte -->
                             <input type="hidden" id="field-Package_Length_Value" name="Package_Length_Value" value="1.2" />
                             <input type="hidden" id="field-Package_Width_Value" name="Package_Width_Value" value="0.6" />
                             <input type="hidden" id="field-Package_Height_Value" name="Package_Height_Value" value="0.6" />
                             <input type="hidden" id="field-Package_Weight_Value" name="Package_Weight_Value" value="15.0" />
                             <input type="hidden" id="field-Package_Volume_Unit" name="Package_Volume_Unit" value="0.432" />
-                            <!-- Einheiten werden fest in der JSON-Generierung gesetzt -->
                         </div>
                     </div>
 
