@@ -112,14 +112,19 @@
     }
 
     // ============================================================
-    // 8. getCurrentValues – alle Daten sammeln
+    // 8. getCurrentValues – alle Daten sammeln (OHNE leere Felder)
     // ============================================================
     function getCurrentValues() {
         const obj = {};
 
         const visibleFields = getAllVisibleFields();
         visibleFields.forEach(input => {
-            obj[input.name] = input.value;
+            // NUR Felder mit einem gültigen name-Attribut hinzufügen
+            if (input.name && input.name.trim() !== '') {
+                obj[input.name] = input.value;
+            } else {
+                console.warn('⚠️ Feld ohne name-Attribut übersprungen:', input);
+            }
         });
 
         // Maße aus versteckten Feldern
@@ -273,6 +278,18 @@
         const payload = getCurrentValues();
         const jsonPayload = JSON.stringify(payload);
 
+        // Prüfe, ob das leere Feld noch vorhanden ist
+        if (payload[''] !== undefined) {
+            console.warn('⚠️ Leeres Feld im Payload gefunden!', payload['']);
+            delete payload[''];
+            console.log('🔧 Leeres Feld entfernt');
+        }
+
+        const headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        };
+
         if (responseContent) {
             responseContent.textContent = `⏳ Sende Anfrage an ${currentEnv.toUpperCase()} ...`;
         }
@@ -280,11 +297,8 @@
         try {
             const response = await fetch(currentEndpoint, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: jsonPayload
+                headers: headers,
+                body: JSON.stringify(payload)
             });
 
             const responseText = await response.text();
