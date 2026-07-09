@@ -260,11 +260,11 @@ body {
     display: block;
 }
 
-/* ---------- PRESET-SIZES ---------- */
-.preset-sizes {
+/* ---------- PRESET-DROPDOWN ---------- */
+.preset-select {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 12px;
     flex-wrap: wrap;
     margin-bottom: 14px;
     padding: 10px 12px;
@@ -276,28 +276,57 @@ body {
     font-size: 0.75rem;
     font-weight: 600;
     color: #4a637c;
-    margin-right: 6px;
 }
 
-.preset-btn {
+.preset-dropdown {
+    padding: 6px 12px;
+    border: 1px solid #d6e0ea;
+    border-radius: 8px;
+    font-size: 0.8rem;
     background: white;
-    border: 2px solid #d6e0ea;
-    border-radius: 30px;
-    padding: 4px 14px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: #003d6b;
+    color: #1e293b;
+    min-width: 200px;
     cursor: pointer;
-    transition: 0.15s;
 }
-.preset-btn:hover {
+.preset-dropdown:focus {
     border-color: #d40511;
-    background: #fff5f5;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(212, 5, 17, 0.10);
 }
-.preset-btn.active {
-    border-color: #d40511;
-    background: #d40511;
-    color: white;
+
+/* ---------- MEASURE DISPLAY ---------- */
+.measure-display {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 8px 16px;
+    padding: 10px 12px;
+    background: #f8fafc;
+    border-radius: 10px;
+    border: 1px solid #e6e9ed;
+}
+
+.measure-item {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+}
+
+.measure-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #4a637c;
+}
+
+.measure-value {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #003d6b;
+}
+
+.measure-unit {
+    font-size: 0.65rem;
+    color: #7a94b0;
+    margin-left: 2px;
 }
 
 /* ---------- FELDER ---------- */
@@ -509,10 +538,13 @@ body {
     .header-umb { flex-direction: column; align-items: flex-start; }
     .field-grid { grid-template-columns: 1fr; }
     .card { padding: 16px; }
-    .preset-sizes { flex-wrap: wrap; }
+    .measure-display { grid-template-columns: 1fr 1fr; }
+    .preset-select { flex-direction: column; align-items: stretch; }
+    .preset-dropdown { min-width: unset; }
 }
 
 @media (max-width: 480px) {
     .dhl-footer { padding: 12px 16px; }
     .footer-inner { flex-direction: column; align-items: flex-start; }
+    .measure-display { grid-template-columns: 1fr; }
 }
