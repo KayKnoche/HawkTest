@@ -1,474 +1,281 @@
-(function() {
-    'use strict';
-
-    console.log('🚀 Script geladen – warte auf DOM...');
-
-    // ============================================================
-    // 1. PRESETS: Vordefinierte Paketgrößen
-    // ============================================================
-    const PRESETS = {
-        S:   { length: '0.20', width: '0.15', height: '0.10', weight: '0.5' },
-        M:   { length: '0.40', width: '0.30', height: '0.20', weight: '2.0' },
-        L:   { length: '0.60', width: '0.40', height: '0.30', weight: '5.0' },
-        XL:  { length: '0.80', width: '0.60', height: '0.40', weight: '10.0' },
-        XXL: { length: '1.20', width: '0.80', height: '0.60', weight: '20.0' }
-    };
-
-    // ============================================================
-    // 2. Endpoints für Stage und Prod
-    // ============================================================
-    const ENDPOINTS = {
-        stage: 'https://depst-mara-stg1.pegacloud.net/prweb/api/HawkTest/01/HawkTest',
-        prod: 'https://depst-mara-prod1.pegacloud.net/prweb/api/HawkTest/01/HawkTest'
-    };
-
-    let currentEnv = 'stage';
-    let currentEndpoint = ENDPOINTS.stage;
-
-    // ============================================================
-    // 3. Mapping: EventClass → Status + PrimaryCriteria
-    // ============================================================
-    const EVENT_MAPPING = {
-        'PAN': { status: 'PAN', primaryCriteria: 'PAN_PAKET' },
-        'PZA': { status: 'PZA', primaryCriteria: 'PZA_PAKET' }
-    };
-
-    // ============================================================
-    // 4. DOM-Referenzen (mit Prüfung)
-    // ============================================================
-    function getEl(id) {
-        const el = document.getElementById(id);
-        if (!el) console.warn('⚠️ Element nicht gefunden:', id);
-        return el;
-    }
-
-    const jsonDisplay = getEl('jsonDisplay');
-    const responseContent = getEl('responseContent');
-    const generateBtn = getEl('generateBtn');
-    const copyBtn = getEl('copyBtn');
-    const sendBtn = getEl('sendBtn');
-    const resetBtn = getEl('resetDefaultsBtn');
-    const recordCount = getEl('recordCount');
-
-    const envStage = getEl('envStage');
-    const envProd = getEl('envProd');
-    const envTitle = getEl('envTitle');
-    const endpointDisplay = getEl('endpointDisplay');
-    const footerEndpoint = getEl('footerEndpoint');
-
-    const subjectIdDisplay = getEl('subjectIdDisplay');
-    const refreshSubjectBtn = getEl('refreshSubjectBtn');
-
-    const presetDropdown = getEl('presetDropdown');
-
-    const displayLength = getEl('displayLength');
-    const displayWidth = getEl('displayWidth');
-    const displayHeight = getEl('displayHeight');
-    const displayWeight = getEl('displayWeight');
-    const displayVolume = getEl('displayVolume');
-
-    const fieldLength = getEl('field-Package_Length_Value');
-    const fieldWidth = getEl('field-Package_Width_Value');
-    const fieldHeight = getEl('field-Package_Height_Value');
-    const fieldWeight = getEl('field-Package_Weight_Value');
-    const fieldVolume = getEl('field-Package_Volume_Unit');
-
-    // EventClass Dropdown
-    const eventSelect = getEl('field-EventClass');
-
-    // Versteckte Felder für Status und PrimaryCriteria
-    const fieldStatus = getEl('field-Status');
-    const fieldPrimaryCriteria = getEl('field-PrimaryCriteria');
-
-    const accordionHeaders = document.querySelectorAll('.accordion-header');
-
-    // ============================================================
-    // 5. Alle sichtbaren Eingabefelder sammeln (ohne hidden)
-    // ============================================================
-    function getAllVisibleFields() {
-        return document.querySelectorAll('#shipmentForm input[type="text"]:not([type="hidden"]), #shipmentForm select');
-    }
-
-    // ============================================================
-    // 6. EventClass → Status & PrimaryCriteria setzen
-    // ============================================================
-    function updateEventDependentFields(eventClass) {
-        const mapping = EVENT_MAPPING[eventClass];
-        if (mapping) {
-            if (fieldStatus) fieldStatus.value = mapping.status;
-            if (fieldPrimaryCriteria) fieldPrimaryCriteria.value = mapping.primaryCriteria;
-            console.log(`📌 EventClass=${eventClass} → Status=${mapping.status}, PrimaryCriteria=${mapping.primaryCriteria}`);
-        }
-    }
-
-    // ============================================================
-    // 7. PostNumber generieren
-    // ============================================================
-    function generatePostNumber() {
-        const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-        let randomPart = '';
-        for (let i = 0; i < 20; i++) {
-            randomPart += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
-        const timestamp = Date.now().toString(36);
-        return `pegacdhuniversaltier-i-${timestamp}${randomPart.substring(0, 10)}`;
-    }
-
-    // ============================================================
-    // 8. getCurrentValues – alle Daten sammeln
-    // ============================================================
-    function getCurrentValues() {
-        const obj = {};
-
-        const visibleFields = getAllVisibleFields();
-        visibleFields.forEach(input => {
-            obj[input.name] = input.value;
-        });
-
-        // Maße aus versteckten Feldern
-        obj['Package_Length_Value'] = fieldLength ? fieldLength.value : '1.2';
-        obj['Package_Width_Value'] = fieldWidth ? fieldWidth.value : '0.6';
-        obj['Package_Height_Value'] = fieldHeight ? fieldHeight.value : '0.6';
-        obj['Package_Weight_Value'] = fieldWeight ? fieldWeight.value : '15.0';
-        obj['Package_Volume_Unit'] = fieldVolume ? fieldVolume.value : '0.432';
-
-        // Feste Einheiten
-        obj['Package_Length_Unit'] = 'M';
-        obj['Package_Width_Unit'] = 'M';
-        obj['Package_Height_Unit'] = 'M';
-        obj['Package_Weight_Unit'] = 'KG';
-
-        // Status und PrimaryCriteria aus den versteckten Feldern
-        obj['Status'] = fieldStatus ? fieldStatus.value : 'PAN';
-        obj['PrimaryCriteria'] = fieldPrimaryCriteria ? fieldPrimaryCriteria.value : 'PAN_PAKET';
-
-        // EventClass aus dem Dropdown
-        obj['EventClass'] = eventSelect ? eventSelect.value : 'PAN';
-
-        // PostNumber generieren
-        obj['PostNumber'] = generatePostNumber();
-
-        return obj;
-    }
-
-    // ============================================================
-    // 9. Maße setzen (Dropdown → Werte + Anzeige)
-    // ============================================================
-    function setMeasures(size) {
-        console.log('📐 setMeasures aufgerufen mit:', size);
-
-        if (!size || !PRESETS[size]) {
-            displayLength.textContent = '—';
-            displayWidth.textContent = '—';
-            displayHeight.textContent = '—';
-            displayWeight.textContent = '—';
-            displayVolume.textContent = '—';
-            if (fieldLength) fieldLength.value = '';
-            if (fieldWidth) fieldWidth.value = '';
-            if (fieldHeight) fieldHeight.value = '';
-            if (fieldWeight) fieldWeight.value = '';
-            if (fieldVolume) fieldVolume.value = '';
-            return;
-        }
-
-        const p = PRESETS[size];
-        const length = parseFloat(p.length);
-        const width = parseFloat(p.width);
-        const height = parseFloat(p.height);
-        const weight = parseFloat(p.weight);
-        const volume = length * width * height;
-
-        displayLength.textContent = length.toFixed(2);
-        displayWidth.textContent = width.toFixed(2);
-        displayHeight.textContent = height.toFixed(2);
-        displayWeight.textContent = weight.toFixed(1);
-        displayVolume.textContent = volume.toFixed(3);
-
-        if (fieldLength) fieldLength.value = length.toFixed(2);
-        if (fieldWidth) fieldWidth.value = width.toFixed(2);
-        if (fieldHeight) fieldHeight.value = height.toFixed(2);
-        if (fieldWeight) fieldWeight.value = weight.toFixed(1);
-        if (fieldVolume) fieldVolume.value = volume.toFixed(3);
-    }
-
-    // ============================================================
-    // 10. Defaults setzen
-    // ============================================================
-    function setDefaults() {
-        console.log('↺ setDefaults aufgerufen');
-
-        const fields = getAllVisibleFields();
-        fields.forEach(input => {
-            if (input.dataset && input.dataset.default !== undefined) {
-                input.value = input.dataset.default;
-            }
-        });
-
-        if (presetDropdown) presetDropdown.value = '';
-
-        // EventClass auf PAN setzen (Default)
-        if (eventSelect) {
-            eventSelect.value = 'PAN';
-            updateEventDependentFields('PAN');
-        }
-
-        const defaultLength = '1.2';
-        const defaultWidth = '0.6';
-        const defaultHeight = '0.6';
-        const defaultWeight = '15.0';
-        const defaultVolume = (parseFloat(defaultLength) * parseFloat(defaultWidth) * parseFloat(defaultHeight)).toFixed(3);
-
-        displayLength.textContent = defaultLength;
-        displayWidth.textContent = defaultWidth;
-        displayHeight.textContent = defaultHeight;
-        displayWeight.textContent = defaultWeight;
-        displayVolume.textContent = defaultVolume;
-
-        if (fieldLength) fieldLength.value = defaultLength;
-        if (fieldWidth) fieldWidth.value = defaultWidth;
-        if (fieldHeight) fieldHeight.value = defaultHeight;
-        if (fieldWeight) fieldWeight.value = defaultWeight;
-        if (fieldVolume) fieldVolume.value = defaultVolume;
-
-        updatePreview();
-    }
-
-    // ============================================================
-    // 11. Preview aktualisieren
-    // ============================================================
-    function updatePreview() {
-        console.log('🔄 updatePreview aufgerufen');
-        const data = getCurrentValues();
-        const jsonStr = JSON.stringify(data, null, 2);
-        if (jsonDisplay) {
-            jsonDisplay.textContent = jsonStr;
-        }
-        if (recordCount) {
-            recordCount.textContent = '1 Datensatz';
-        }
-    }
-
-    // ============================================================
-    // 12. Kopieren
-    // ============================================================
-    function copyToClipboard() {
-        console.log('📋 copyToClipboard aufgerufen');
-        const text = jsonDisplay ? jsonDisplay.textContent : '';
-        if (!text || text.startsWith('//')) {
-            alert('Bitte zuerst JSON generieren.');
-            return;
-        }
-        navigator.clipboard.writeText(text).then(() => {
-            alert('✅ JSON kopiert!');
-        }).catch(() => {
-            const textarea = document.createElement('textarea');
-            textarea.value = text;
-            document.body.appendChild(textarea);
-            textarea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textarea);
-            alert('✅ Kopiert (Fallback)');
-        });
-    }
-
-    // ============================================================
-    // 13. Senden
-    // ============================================================
-    async function sendToService() {
-        console.log('🚀 sendToService aufgerufen – Endpoint:', currentEndpoint);
-        const payload = getCurrentValues();
-        const jsonPayload = JSON.stringify(payload);
-
-        if (responseContent) {
-            responseContent.textContent = `⏳ Sende Anfrage an ${currentEnv.toUpperCase()} ...`;
-        }
-
-        try {
-            const response = await fetch(currentEndpoint, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: jsonPayload
-            });
-
-            const responseText = await response.text();
-            let formattedResponse = responseText;
-            try {
-                const json = JSON.parse(responseText);
-                formattedResponse = JSON.stringify(json, null, 2);
-            } catch (_) {}
-
-            if (responseContent) {
-                responseContent.textContent = `✅ [${currentEnv.toUpperCase()}] Status: ${response.status} ${response.statusText}\n\n📨 Antwort:\n${formattedResponse}`;
-            }
-        } catch (error) {
-            if (responseContent) {
-                responseContent.textContent = `❌ [${currentEnv.toUpperCase()}] Fehler beim Senden:\n${error.message}`;
-            }
-        }
-    }
-
-    // ============================================================
-    // 14. SubjectID aktualisieren
-    // ============================================================
-    function refreshSubjectId() {
-        console.log('🔄 refreshSubjectId aufgerufen');
-        const newId = Math.floor(100000000 + Math.random() * 900000000);
-        if (subjectIdDisplay) {
-            subjectIdDisplay.textContent = String(newId);
-        }
-    }
-
-    // ============================================================
-    // 15. Stage/Prod Toggle
-    // ============================================================
-    function setEnvironment(env) {
-        console.log('🌍 setEnvironment aufgerufen:', env);
-        currentEnv = env;
-
-        if (env === 'stage') {
-            if (envStage) envStage.classList.add('active');
-            if (envProd) envProd.classList.remove('active');
-            if (envTitle) envTitle.textContent = 'STAGE – personalisiert via Pega CDH';
-            currentEndpoint = ENDPOINTS.stage;
-        } else {
-            if (envProd) envProd.classList.add('active');
-            if (envStage) envStage.classList.remove('active');
-            if (envTitle) envTitle.textContent = 'PROD – personalisiert via Pega CDH';
-            currentEndpoint = ENDPOINTS.prod;
-        }
-
-        if (endpointDisplay) {
-            endpointDisplay.textContent = currentEndpoint;
-        }
-        if (footerEndpoint) {
-            footerEndpoint.textContent = currentEndpoint;
-        }
-
-        console.log('📍 Neuer Endpoint:', currentEndpoint);
-    }
-
-    // ============================================================
-    // 16. Akkordeon
-    // ============================================================
-    function toggleAccordion(header) {
-        const targetId = header.dataset.target;
-        const panel = document.getElementById(targetId);
-        if (!panel) return;
-
-        const toggle = header.querySelector('.accordion-toggle');
-        const isOpen = panel.classList.contains('open');
-
-        document.querySelectorAll('.accordion-panel').forEach(p => p.classList.remove('open'));
-        document.querySelectorAll('.accordion-toggle').forEach(t => t.textContent = '+');
-
-        if (!isOpen) {
-            panel.classList.add('open');
-            if (toggle) toggle.textContent = '−';
-        }
-    }
-
-    // ============================================================
-    // 17. Event-Listener registrieren
-    // ============================================================
-    function init() {
-        console.log('✅ init() wird ausgeführt – binde Events...');
-
-        if (generateBtn) {
-            generateBtn.addEventListener('click', updatePreview);
-            console.log('✅ generateBtn gebunden');
-        }
-
-        if (copyBtn) {
-            copyBtn.addEventListener('click', copyToClipboard);
-            console.log('✅ copyBtn gebunden');
-        }
-
-        if (sendBtn) {
-            sendBtn.addEventListener('click', sendToService);
-            console.log('✅ sendBtn gebunden');
-        }
-
-        if (resetBtn) {
-            resetBtn.addEventListener('click', setDefaults);
-            console.log('✅ resetBtn gebunden');
-        }
-
-        if (refreshSubjectBtn) {
-            refreshSubjectBtn.addEventListener('click', refreshSubjectId);
-            console.log('✅ refreshSubjectBtn gebunden');
-        }
-
-        if (envStage) {
-            envStage.addEventListener('click', function() { setEnvironment('stage'); });
-            console.log('✅ envStage gebunden');
-        }
-
-        if (envProd) {
-            envProd.addEventListener('click', function() { setEnvironment('prod'); });
-            console.log('✅ envProd gebunden');
-        }
-
-        if (presetDropdown) {
-            presetDropdown.addEventListener('change', function() {
-                console.log('📋 Dropdown geändert:', this.value);
-                setMeasures(this.value);
-                updatePreview();
-            });
-            console.log('✅ presetDropdown gebunden');
-        }
-
-        // EventClass Dropdown – Update der abhängigen Felder
-        if (eventSelect) {
-            eventSelect.addEventListener('change', function() {
-                console.log('🎯 EventClass geändert:', this.value);
-                updateEventDependentFields(this.value);
-                updatePreview();
-            });
-            console.log('✅ eventSelect gebunden');
-            // Initial setzen
-            updateEventDependentFields(eventSelect.value);
-        }
-
-        accordionHeaders.forEach(header => {
-            header.addEventListener('click', function() {
-                toggleAccordion(this);
-            });
-        });
-        console.log(`✅ ${accordionHeaders.length} Akkordeon-Header gebunden`);
-
-        // Initiale Werte setzen
-        setDefaults();
-
-        // Standardmäßig Stage setzen
-        setEnvironment('stage');
-
-        if (responseContent) {
-            responseContent.textContent = '🔹 Bereit. Klicke auf "Senden", um den Service aufzurufen.';
-        }
-
-        // Paketmaße standardmäßig offen
-        const panelMeasures = document.getElementById('panelMeasures');
-        if (panelMeasures) {
-            panelMeasures.classList.add('open');
-            const toggle = document.querySelector('.accordion-header[data-target="panelMeasures"] .accordion-toggle');
-            if (toggle) toggle.textContent = '−';
-        }
-
-        updatePreview();
-        console.log('✅ DHL Shipment Test Tool vollständig initialisiert!');
-        console.log('📍 Aktueller Endpoint:', currentEndpoint);
-    }
-
-    // ============================================================
-    // 18. Start
-    // ============================================================
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
-        init();
-    }
-
-})();
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DHL Shipment Test Tool</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <!-- ===== HEADER ===== -->
+    <header class="dhl-header">
+        <div class="header-inner">
+            <div class="logo-area">
+                <img src="https://www.dhl.com/content/dam/dhl/global/core/images/logos/dhl-logo.svg" alt="DHL" class="dhl-logo" onerror="this.style.display='none'" />
+                <span class="brand-tag">Test Tool</span>
+            </div>
+            <nav class="header-nav">
+                <a href="#">Pakete versenden</a>
+                <a href="#">Pakete empfangen</a>
+                <a href="#">Hilfe & Kontakt</a>
+            </nav>
+        </div>
+        <div class="header-umb">
+            <div class="umb-group">
+                <span class="umb-label">Umgebung:</span>
+                <span class="umb-badge active" id="envStage">Stage</span>
+                <span class="umb-badge" id="envProd">Prod</span>
+            </div>
+            <div class="umb-group">
+                <span class="umb-label">SubjectID:</span>
+                <span class="umb-value" id="subjectIdDisplay">872225573</span>
+                <button class="umb-refresh" id="refreshSubjectBtn">🔄 Aktualisieren</button>
+            </div>
+            <div class="umb-group">
+                <span class="umb-label">Endpoint:</span>
+                <code class="umb-endpoint" id="endpointDisplay">https://depst-mara-stg1.pegacloud.net/prweb/api/HawkTest/01/HawkTest</code>
+            </div>
+        </div>
+    </header>
+
+    <!-- ===== MAIN ===== -->
+    <main class="dhl-main">
+        <div class="page-title">
+            <h1 id="envTitle">STAGE – personalisiert via Pega CDH</h1>
+        </div>
+
+        <!-- ===== ZWEISPALTIG ===== -->
+        <div class="two-columns">
+            <!-- Linke Spalte: Eingabe -->
+            <section class="card input-card">
+                <div class="card-header">
+                    <span class="card-icon">📦</span>
+                    <h2>Versanddaten eingeben</h2>
+                </div>
+                <form id="shipmentForm">
+
+                    <!-- 1. PAKETMASE (einklappbar) -->
+                    <div class="accordion-section">
+                        <div class="accordion-header" data-target="panelMeasures">
+                            <span class="accordion-icon">📐</span>
+                            <span class="accordion-title">Paketmaße</span>
+                            <span class="accordion-toggle">−</span>
+                        </div>
+                        <div class="accordion-panel open" id="panelMeasures">
+                            <div class="preset-select">
+                                <label for="presetDropdown" class="preset-label">Vordefinierte Größe:</label>
+                                <select id="presetDropdown" class="preset-dropdown">
+                                    <option value="">-- Bitte wählen --</option>
+                                    <option value="S">S – 20×15×10 cm, 0.5 kg</option>
+                                    <option value="M">M – 40×30×20 cm, 2.0 kg</option>
+                                    <option value="L">L – 60×40×30 cm, 5.0 kg</option>
+                                    <option value="XL">XL – 80×60×40 cm, 10.0 kg</option>
+                                    <option value="XXL">XXL – 120×80×60 cm, 20.0 kg</option>
+                                </select>
+                            </div>
+                            <div class="measure-display">
+                                <div class="measure-item">
+                                    <span class="measure-label">Länge:</span>
+                                    <span class="measure-value" id="displayLength">1.20</span>
+                                    <span class="measure-unit">m</span>
+                                </div>
+                                <div class="measure-item">
+                                    <span class="measure-label">Breite:</span>
+                                    <span class="measure-value" id="displayWidth">0.60</span>
+                                    <span class="measure-unit">m</span>
+                                </div>
+                                <div class="measure-item">
+                                    <span class="measure-label">Höhe:</span>
+                                    <span class="measure-value" id="displayHeight">0.60</span>
+                                    <span class="measure-unit">m</span>
+                                </div>
+                                <div class="measure-item">
+                                    <span class="measure-label">Gewicht:</span>
+                                    <span class="measure-value" id="displayWeight">15.0</span>
+                                    <span class="measure-unit">kg</span>
+                                </div>
+                                <div class="measure-item">
+                                    <span class="measure-label">Volumen:</span>
+                                    <span class="measure-value" id="displayVolume">0.432</span>
+                                    <span class="measure-unit">m³</span>
+                                </div>
+                            </div>
+                            <input type="hidden" id="field-Package_Length_Value" name="Package_Length_Value" value="1.2" />
+                            <input type="hidden" id="field-Package_Width_Value" name="Package_Width_Value" value="0.6" />
+                            <input type="hidden" id="field-Package_Height_Value" name="Package_Height_Value" value="0.6" />
+                            <input type="hidden" id="field-Package_Weight_Value" name="Package_Weight_Value" value="15.0" />
+                            <input type="hidden" id="field-Package_Volume_Unit" name="Package_Volume_Unit" value="0.432" />
+                        </div>
+                    </div>
+
+                    <!-- 2. SENDERADRESSE (einklappbar) -->
+                    <div class="accordion-section">
+                        <div class="accordion-header" data-target="panelSender">
+                            <span class="accordion-icon">📍</span>
+                            <span class="accordion-title">Senderadresse (Org)</span>
+                            <span class="accordion-toggle">+</span>
+                        </div>
+                        <div class="accordion-panel" id="panelSender">
+                            <div class="field-grid">
+                                <div class="field">
+                                    <label for="field-CountryCodeOrg">Land</label>
+                                    <input type="text" id="field-CountryCodeOrg" name="CountryCodeOrg" value="DE" data-default="DE" />
+                                </div>
+                                <div class="field">
+                                    <label for="field-ZipOrg">PLZ</label>
+                                    <input type="text" id="field-ZipOrg" name="ZipOrg" value="37079" data-default="37079" />
+                                </div>
+                                <div class="field" style="grid-column: span 2;">
+                                    <label for="field-CityOrg">Stadt</label>
+                                    <input type="text" id="field-CityOrg" name="CityOrg" value="Göttingen" data-default="Göttingen" />
+                                </div>
+                                <div class="field" style="grid-column: span 2;">
+                                    <label for="field-StreetOrg">Straße</label>
+                                    <input type="text" id="field-StreetOrg" name="StreetOrg" value="Robert-Bosch-Breite 912" data-default="Robert-Bosch-Breite 912" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. EMPFÄNGERADRESSE (einklappbar) -->
+                    <div class="accordion-section">
+                        <div class="accordion-header" data-target="panelReceiver">
+                            <span class="accordion-icon">📬</span>
+                            <span class="accordion-title">Empfängeradresse (Adr)</span>
+                            <span class="accordion-toggle">+</span>
+                        </div>
+                        <div class="accordion-panel" id="panelReceiver">
+                            <div class="field-grid">
+                                <div class="field">
+                                    <label for="field-CountryCodeAdr">Land</label>
+                                    <input type="text" id="field-CountryCodeAdr" name="CountryCodeAdr" value="AT" data-default="AT" />
+                                </div>
+                                <div class="field">
+                                    <label for="field-ZipAdr">PLZ</label>
+                                    <input type="text" id="field-ZipAdr" name="ZipAdr" value="6922" data-default="6922" />
+                                </div>
+                                <div class="field" style="grid-column: span 2;">
+                                    <label for="field-CityAdr">Stadt</label>
+                                    <input type="text" id="field-CityAdr" name="CityAdr" value="Wolfurt" data-default="Wolfurt" />
+                                </div>
+                                <div class="field" style="grid-column: span 2;">
+                                    <label for="field-StreetAdr">Straße</label>
+                                    <input type="text" id="field-StreetAdr" name="StreetAdr" value="Holzriedstrasse 29" data-default="Holzriedstrasse 29" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 4. WEITERE FELDER (einklappbar) -->
+                    <div class="accordion-section">
+                        <div class="accordion-header" data-target="panelOther">
+                            <span class="accordion-icon">⚙️</span>
+                            <span class="accordion-title">Weitere Felder</span>
+                            <span class="accordion-toggle">+</span>
+                        </div>
+                        <div class="accordion-panel" id="panelOther">
+                            <div class="field-grid">
+                                <div class="field">
+                                    <label for="field-ID">ID</label>
+                                    <input type="text" id="field-ID" name="ID" value="10000478269202" data-default="10000478269202" />
+                                </div>
+                                <div class="field">
+                                    <label for="field-RoutingInformation">RoutingInfo</label>
+                                    <input type="text" id="field-RoutingInformation" name="RoutingInformation" value="2LAT6922+74000000" data-default="2LAT6922+74000000" />
+                                </div>
+                                <div class="field">
+                                    <label for="field-PackageBatchCardValue">BatchCard</label>
+                                    <input type="text" id="field-PackageBatchCardValue" name="PackageBatchCardValue" value="JJD149990299999006553" data-default="JJD149990299999006553" />
+                                </div>
+                                <div class="field">
+                                    <label for="field-EkpRegulatorShipment">EkpRegulator</label>
+                                    <input type="text" id="field-EkpRegulatorShipment" name="EkpRegulatorShipment" value="7000100904" data-default="7000100904" />
+                                </div>
+                                <div class="field">
+                                    <label for="field-Participation">Participation</label>
+                                    <input type="text" id="field-Participation" name="Participation" value="01" data-default="01" />
+                                </div>
+                                <div class="field">
+                                    <label for="field-ProductCode">ProductCode</label>
+                                    <input type="text" id="field-ProductCode" name="ProductCode" value="80" data-default="80" />
+                                </div>
+                                <div class="field">
+                                    <label for="field-ShipmentCategory">Kategorie</label>
+                                    <input type="text" id="field-ShipmentCategory" name="ShipmentCategory" value="PAKET" data-default="PAKET" />
+                                </div>
+                                <!-- EventClass als Dropdown -->
+                                <div class="field">
+                                    <label for="field-EventClass">EventClass</label>
+                                    <select id="field-EventClass" name="EventClass" class="event-select">
+                                        <option value="PAN">PAN</option>
+                                        <option value="PZA">PZA</option>
+                                    </select>
+                                </div>
+                                <div class="field">
+                                    <label for="field-DstID">DstID</label>
+                                    <input type="text" id="field-DstID" name="DstID" value="5003" data-default="5003" />
+                                </div>
+                                <div class="field">
+                                    <label for="field-AddressedDeliveryChannel">Zustellkanal</label>
+                                    <input type="text" id="field-AddressedDeliveryChannel" name="AddressedDeliveryChannel" value="HAUSADRESSE" data-default="HAUSADRESSE" />
+                                </div>
+                                <div class="field">
+                                    <label for="field-Procedure">Procedure</label>
+                                    <input type="text" id="field-Procedure" name="Procedure" value="87" data-default="87" />
+                                </div>
+                                <!-- Status und PrimaryCriteria sind versteckt – werden automatisch befüllt -->
+                                <input type="hidden" id="field-Status" name="Status" value="PAN" />
+                                <input type="hidden" id="field-PrimaryCriteria" name="PrimaryCriteria" value="PAN_PAKET" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-primary" id="generateBtn">🔄 JSON generieren</button>
+                        <button type="button" class="btn btn-secondary" id="resetDefaultsBtn">↺ Zurücksetzen</button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Rechte Spalte: JSON -->
+            <section class="card json-card">
+                <div class="card-header">
+                    <span class="card-icon">📋</span>
+                    <h2>JSON Payload</h2>
+                </div>
+                <div class="json-actions">
+                    <button class="btn btn-small btn-outline" id="copyBtn">📋 Kopieren</button>
+                    <button class="btn btn-small btn-send" id="sendBtn">✉️ Senden</button>
+                </div>
+                <div class="json-display" id="jsonDisplay">
+                    <code>// Klicke auf "JSON generieren"</code>
+                </div>
+                <div class="json-status">
+                    <span class="status-badge" id="recordCount">1 Datensatz</span>
+                </div>
+            </section>
+        </div>
+
+        <!-- Server-Antwort -->
+        <section class="card response-card">
+            <div class="card-header">
+                <span class="card-icon">📨</span>
+                <h2>Server-Antwort</h2>
+            </div>
+            <div class="response-content" id="responseContent">
+                🔹 Bereit. Klicke auf "Senden", um den Service aufzurufen.
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="dhl-footer">
+        <div class="footer-inner">
+            <span>Endpoint: <code id="footerEndpoint">https://depst-mara-stg1.pegacloud.net/prweb/api/HawkTest/01/HawkTest</code></span>
+            <span class="footer-meta">© 2026 DHL · v1.0 · Testumgebung</span>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
